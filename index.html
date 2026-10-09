@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Finance Dashboard</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#f5f6fa;--card:#fff;--tx:#1b1f2a;--mu:#6b7280;--bd:#e5e7eb;--ac:#4f46e5;--ok:#16a34a;--bad:#dc2626;--warn:#d97706}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1117;--card:#1a1d27;--tx:#e8eaf0;--mu:#9aa1b2;--bd:#2a2e3b;--ac:#818cf8;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24}}
+:root[data-theme="dark"]{--bg:#0f1117;--card:#1a1d27;--tx:#e8eaf0;--mu:#9aa1b2;--bd:#2a2e3b;--ac:#818cf8;--ok:#4ade80;--bad:#f87171;--warn:#fbbf24}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px}
+h1{font-size:22px;margin:0}h2{font-size:15px;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px}
+.grid{display:grid;gap:14px;margin-bottom:14px}
+.g4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.g2{grid-template-columns:repeat(auto-fit,minmax(310px,1fr))}
+input,select,button{font:inherit;color:var(--tx);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:8px 10px;min-width:0}
+button{cursor:pointer}button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+.row{display:flex;flex-wrap:wrap;gap:8px}.row>*{flex:1 1 120px}
+.k{color:var(--mu);font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+.v{font-size:24px;font-weight:700}
+.pos{color:var(--ok)}.neg{color:var(--bad)}
+.bar{height:8px;background:var(--bd);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;border-radius:6px}
+.b{margin-bottom:12px}.b .t{display:flex;justify-content:space-between;gap:8px;font-size:13px;margin-bottom:4px;align-items:center}
+.b input{width:80px;padding:3px 6px;text-align:right}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:520px}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--bd);font-size:14px}th{color:var(--mu);font-weight:600;cursor:pointer}
+td.a{text-align:right;font-weight:600}.x{background:none;border:none;color:var(--mu);padding:2px 8px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px}
+.lg{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px;margin-top:8px}
+.alert{background:color-mix(in srgb,var(--bad) 12%,transparent);border:1px solid var(--bad);color:var(--bad);border-radius:10px;padding:8px 12px;margin-bottom:14px;font-size:14px}
+.ch{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:center}
+.weather-search{display:flex;gap:8px;max-width:520px;margin-bottom:14px}.weather-search input{flex:1}
+.weather-state{min-height:72px;display:flex;align-items:center;color:var(--mu)}
+.weather-result{display:flex;flex-wrap:wrap;align-items:center;gap:18px}
+.weather-place{font-size:18px;font-weight:650}.weather-reading{display:flex;gap:22px;flex-wrap:wrap}
+.weather-reading .v{font-size:26px}.weather-skeleton{width:min(100%,440px);display:grid;gap:10px}
+.weather-skeleton i{display:block;height:14px;border-radius:6px;background:var(--bd);animation:weather-pulse 1.2s ease-in-out infinite}
+.weather-skeleton i:first-child{width:58%;height:20px}.weather-skeleton i:last-child{width:72%}
+@keyframes weather-pulse{50%{opacity:.45}}
+@media(max-width:480px){.weather-search{flex-wrap:wrap}.weather-search input{flex-basis:100%}}
+</style></head><body><div class="wrap">
+<header><h1>💰 Finance Dashboard</h1>
+<div class="row" style="flex:0 1 auto"><select id="month" aria-label="Month"></select><button id="theme">🌓</button><button id="reset">Reset data</button></div></header>
+<div id="alerts"></div>
+<div class="grid g4" id="sum"></div>
+<section class="card" aria-labelledby="weather-title" style="margin-bottom:14px">
+<h2 id="weather-title">Current weather</h2>
+<form id="weather-form" class="weather-search">
+<input id="weather-city" type="search" placeholder="Search for a city" aria-label="City name" autocomplete="off">
+<button class="p" type="submit">Search</button>
+</form>
+<div id="weather-state" class="weather-state" role="status" aria-live="polite">Search for a city to see the current weather.</div>
+</section>
+<div class="card" style="margin-bottom:14px"><h2>Add transaction</h2>
+<div class="row"><select id="f-type"><option value="expense">Expense</option><option value="income">Income</option></select>
+<input id="f-amt" type="number" min="0" step="0.01" placeholder="Amount">
+<select id="f-cat"></select><input id="f-date" type="date"><input id="f-note" placeholder="Note (optional)" style="flex:2 1 160px">
+<button class="p" id="add">Add</button></div><div id="err" class="neg" style="font-size:13px;margin-top:6px"></div></div>
+<div class="grid g2">
+<div class="card"><h2>Spending breakdown</h2><div class="ch"><svg id="donut" role="img" aria-label="Spending breakdown chart" width="190" height="190" viewBox="0 0 190 190"></svg><div class="lg" id="leg" style="flex-direction:column"></div></div></div>
+<div class="card"><h2>Monthly budget limits <span class="k">(edit to change)</span></h2><div id="budgets"></div></div>
+</div>
+<div class="card" style="margin-bottom:14px"><h2>Income vs expenses · last 6 months</h2><div class="tw"><svg id="trend" role="img" aria-label="Income versus expenses chart for the last six months" viewBox="0 0 600 200" style="width:100%;min-width:420px"></svg></div></div>
+<div class="card"><h2>Transactions</h2>
+<div class="row" style="margin-bottom:10px"><input id="q" placeholder="Search notes/categories…" style="flex:2 1 160px">
+<select id="ft"><option value="">All types</option><option value="expense">Expenses</option><option value="income">Income</option></select>
+<select id="fc"></select><label class="k" style="display:flex;align-items:center;gap:6px;flex:0 0 auto"><input type="checkbox" id="all" style="padding:0"> All months</label></div>
+<div class="tw"><table><thead><tr><th data-s="date">Date ↕</th><th data-s="cat">Category ↕</th><th data-s="note">Note</th><th data-s="amt" style="text-align:right">Amount ↕</th><th></th></tr></thead><tbody id="tb"></tbody></table></div>
+<div id="cnt" class="k" style="margin-top:8px"></div></div>
+</div>
+<script>
+const EC={Food:"#f97316",Rent:"#6366f1",Transport:"#0ea5e9",Shopping:"#ec4899",Bills:"#eab308",Health:"#10b981",Fun:"#a855f7",Other:"#94a3b8"};
+const IC=["Salary","Freelance","Gift","Other"];
+const $=id=>document.getElementById(id);
+let lastWeatherQuery="";
+function renderWeatherEmpty(){const state=$("weather-state");state.className="weather-state";state.setAttribute("role","status");state.innerHTML="Search for a city to see the current weather."}
+function renderWeatherLoading(){const state=$("weather-state");state.className="weather-state";state.setAttribute("role","status");state.innerHTML='<div class="weather-skeleton" aria-label="Loading weather"><i></i><i></i><i></i></div>'}
+function renderWeatherError(message){const state=$("weather-state");state.className="weather-state";state.setAttribute("role","alert");state.innerHTML=`<div><div>${esc(message)}</div><button id="weather-retry" type="button" style="margin-top:8px">Retry</button></div>`;$("weather-retry").onclick=()=>loadWeather(lastWeatherQuery)}
+async function loadWeather(query){
+const city=query.trim();if(!city){renderWeatherEmpty();return}lastWeatherQuery=city;renderWeatherLoading();
+try{
+const geoUrl=new URL("https://geocoding-api.open-meteo.com/v1/search");geoUrl.search=new URLSearchParams({name:city,count:"1",language:"en",format:"json"});
+const geoResponse=await fetch(geoUrl);if(!geoResponse.ok)throw new Error("City search is temporarily unavailable.");
+const geoData=await geoResponse.json(),place=geoData.results?.[0];if(!place)throw new Error(`No city found for “${city}”. Check the spelling and try again.`);
+const forecastUrl=new URL("https://api.open-meteo.com/v1/forecast");forecastUrl.search=new URLSearchParams({latitude:place.latitude,longitude:place.longitude,current_weather:"true",timezone:"auto"});
+const forecastResponse=await fetch(forecastUrl);if(!forecastResponse.ok)throw new Error("The weather service is temporarily unavailable.");
+const forecast=await forecastResponse.json(),current=forecast.current_weather;if(!current)throw new Error("Current weather is unavailable for this city.");
+const details=[place.admin1,place.country].filter((part,index,array)=>part&&array.indexOf(part)===index);
+const state=$("weather-state");state.className="weather-state";state.setAttribute("role","status");
+state.innerHTML=`<div class="weather-result"><div class="weather-place">${esc([place.name,...details].join(", "))}</div><div class="weather-reading"><div><div class="k">Temperature</div><div class="v">${esc(current.temperature)}°C</div></div><div><div class="k">Wind speed</div><div class="v">${esc(current.windspeed)} km/h</div></div></div></div>`;
+}catch(error){renderWeatherError(error instanceof TypeError?"Could not connect to the weather service. Check your connection and retry.":error.message||"Unable to load weather. Please try again.")}
+}
+const fmt=n=>(n<0?"-":"")+"$"+Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ym=d=>d.slice(0,7);
+const now=new Date(),cur=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
+const mk=(off)=>{const d=new Date(now.getFullYear(),now.getMonth()-off,1);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")};
+let id=1,sortK="date",sortD=-1;
+const defBud={Food:400,Rent:1200,Transport:120,Shopping:200,Bills:180,Health:80,Fun:100,Other:100};
+function seed(){const t=[];const add=(m,d,type,cat,amt,note)=>t.push({id:id++,date:m+"-"+String(d).padStart(2,"0"),type,cat,amt,note});
+for(let i=0;i<6;i++){const m=mk(i);add(m,1,"income","Salary",3200,"Monthly salary");add(m,2,"expense","Rent",1200,"Rent");
+add(m,5,"expense","Food",90+i*13%50,"Groceries");add(m,12,"expense","Food",60+i*7%40,"Dining out");add(m,8,"expense","Transport",45+i*9%30,"Fuel / transit");
+add(m,15,"expense","Bills",150+i*5,"Utilities & internet");add(m,18,"expense","Shopping",70+i*31%120,"Clothes");add(m,20,"expense","Fun",40+i*17%60,"Movies & games");
+if(i%2==0)add(m,22,"income","Freelance",450,"Side project")}
+return t}
+let S={tx:[],bud:{...defBud}};
+try{const r=localStorage.getItem("fin1");if(r){S=JSON.parse(r)}else S.tx=seed()}catch(e){S.tx=seed()}
+id=Math.max(0,...S.tx.map(t=>t.id))+1;
+const save=()=>{try{localStorage.setItem("fin1",JSON.stringify(S))}catch(e){}};
+function fillSel(){const months=[...new Set([...S.tx.map(t=>ym(t.date)),cur])].sort().reverse();const v=$("month").value||cur;
+$("month").innerHTML=months.map(m=>`<option ${m==v?"selected":""}>${m}</option>`).join("");
+const t=$("f-type").value;$("f-cat").innerHTML=(t=="income"?IC:Object.keys(EC)).map(c=>`<option>${c}</option>`).join("");
+const fc=$("fc").value;$("fc").innerHTML='<option value="">All categories</option>'+[...Object.keys(EC),...IC.filter(c=>c!="Other")].map(c=>`<option ${c==fc?"selected":""}>${c}</option>`).join("")}
+function render(){const M=$("month").value,mt=S.tx.filter(t=>ym(t.date)==M);
+const inc=mt.filter(t=>t.type=="income").reduce((a,t)=>a+t.amt,0),exp=mt.filter(t=>t.type=="expense").reduce((a,t)=>a+t.amt,0);
+const bt=Object.values(S.bud).reduce((a,b)=>a+(+b||0),0);
+$("sum").innerHTML=[["Income",fmt(inc),"pos"],["Expenses",fmt(exp),"neg"],["Net savings",fmt(inc-exp),inc-exp>=0?"pos":"neg"],["Budget used",bt?Math.round(exp/bt*100)+"%":"–",exp>bt?"neg":""]].map(c=>`<div class="card"><div class="k">${c[0]}</div><div class="v ${c[2]}">${c[1]}</div></div>`).join("");
+// category totals
+const by={};mt.filter(t=>t.type=="expense").forEach(t=>by[t.cat]=(by[t.cat]||0)+t.amt);
+// budgets
+$("budgets").innerHTML=Object.keys(EC).map(c=>{const sp=by[c]||0,l=+S.bud[c]||0,p=l?sp/l*100:0,col=p>=100?"var(--bad)":p>=80?"var(--warn)":"var(--ok)";
+return `<div class="b"><div class="t"><span><i class="dot" style="background:${EC[c]}"></i>${c}</span><span>${fmt(sp)} / <input type="number" min="0" data-b="${c}" value="${l}"></span></div><div class="bar"><i style="width:${Math.min(p,100)}%;background:${col}"></i></div></div>`}).join("");
+$("alerts").innerHTML=Object.keys(EC).filter(c=>S.bud[c]&&(by[c]||0)>S.bud[c]).map(c=>`<div class="alert">⚠️ ${c} is over budget by ${fmt(by[c]-S.bud[c])}</div>`).join("");
+// donut
+const ent=Object.entries(by).sort((a,b)=>b[1]-a[1]),R=70,C=2*Math.PI*R;let off=0,h="";
+if(!ent.length)h=`<text x="95" y="100" text-anchor="middle" fill="var(--mu)">No spending</text>`;
+else{ent.forEach(([c,v])=>{const d=v/exp*C;h+=`<circle cx="95" cy="95" r="${R}" fill="none" stroke="${EC[c]}" stroke-width="28" stroke-dasharray="${d} ${C-d}" stroke-dashoffset="${-off}" transform="rotate(-90 95 95)"><title>${c}: ${fmt(v)}</title></circle>`;off+=d});
+h+=`<text x="95" y="92" text-anchor="middle" fill="var(--mu)" font-size="11">Spent</text><text x="95" y="112" text-anchor="middle" fill="var(--tx)" font-size="16" font-weight="700">${fmt(exp)}</text>`}
+$("donut").innerHTML=h;
+$("leg").innerHTML=ent.map(([c,v])=>`<div><i class="dot" style="background:${EC[c]}"></i>${c} · ${fmt(v)} (${Math.round(v/exp*100)}%)</div>`).join("");
+// trend
+const ms=[5,4,3,2,1,0].map(mk),dat=ms.map(m=>[S.tx.filter(t=>ym(t.date)==m&&t.type=="income").reduce((a,t)=>a+t.amt,0),S.tx.filter(t=>ym(t.date)==m&&t.type=="expense").reduce((a,t)=>a+t.amt,0)]);
+const mx=Math.max(1,...dat.flat()),w=600/6;let g="";
+dat.forEach((d,i)=>{const x=i*w+w/2-30;[[d[0],"var(--ok)",0],[d[1],"var(--bad)",32]].forEach(([v,c,o])=>{const hh=v/mx*140;g+=`<rect x="${x+o}" y="${165-hh}" width="28" height="${hh}" rx="4" fill="${c}" opacity=".85"><title>${fmt(v)}</title></rect>`});
+g+=`<text x="${i*w+w/2}" y="188" text-anchor="middle" font-size="12" fill="var(--mu)">${ms[i]}</text>`});
+$("trend").innerHTML=g+`<text x="4" y="12" font-size="11" fill="var(--ok)">■ Income</text><text x="70" y="12" font-size="11" fill="var(--bad)">■ Expenses</text>`;
+// table
+const q=$("q").value.toLowerCase(),ft=$("ft").value,fc=$("fc").value,all=$("all").checked;
+let L=S.tx.filter(t=>(all||ym(t.date)==M)&&(!ft||t.type==ft)&&(!fc||t.cat==fc)&&(!q||(t.note+" "+t.cat).toLowerCase().includes(q)));
+L.sort((a,b)=>{const x=a[sortK],y=b[sortK];return (x>y?1:x<y?-1:0)*sortD});
+$("tb").innerHTML=L.map(t=>`<tr><td>${t.date}</td><td><i class="dot" style="background:${EC[t.cat]||"var(--ok)"}"></i>${esc(t.cat)}</td><td>${esc(t.note||"—")}</td><td class="a ${t.type=="income"?"pos":""}">${t.type=="income"?"+":"-"}${fmt(t.amt)}</td><td><button class="x" data-d="${t.id}" aria-label="Delete">✕</button></td></tr>`).join("")||`<tr><td colspan="5" style="text-align:center;color:var(--mu)">No transactions match.</td></tr>`;
+const net=L.reduce((a,t)=>a+(t.type=="income"?t.amt:-t.amt),0);
+$("cnt").textContent=`${L.length} transactions · net ${fmt(net)}`}
+function refresh(){fillSel();render()}
+$("add").onclick=()=>{const amt=parseFloat($("f-amt").value),date=$("f-date").value;
+if(!(amt>0))return $("err").textContent="Enter an amount greater than 0.";if(!date)return $("err").textContent="Pick a date.";
+$("err").textContent="";S.tx.push({id:id++,date,type:$("f-type").value,cat:$("f-cat").value,amt,note:$("f-note").value.trim()});
+$("f-amt").value="";$("f-note").value="";$("month").value=ym(date);save();refresh()};
+$("f-type").onchange=fillSel;$("f-date").value=now.toISOString().slice(0,10);
+["month","q","ft","fc","all"].forEach(i=>$(i).addEventListener("input",render));
+document.addEventListener("click",e=>{const d=e.target.dataset;if(d.d){S.tx=S.tx.filter(t=>t.id!=d.d);save();refresh()}
+if(d.s){sortD=sortK==d.s?-sortD:-1;sortK=d.s;render()}});
+$("budgets").addEventListener("change",e=>{const c=e.target.dataset.b;if(c){S.bud[c]=Math.max(0,+e.target.value||0);save();render()}});
+$("theme").onclick=()=>{const r=document.documentElement,dk=r.dataset.theme?r.dataset.theme=="dark":matchMedia("(prefers-color-scheme:dark)").matches;r.dataset.theme=dk?"light":"dark"};
+$("reset").onclick=()=>{S={tx:seed(),bud:{...defBud}};save();refresh()};
+fillSel();$("month").value=cur;refresh();
+$("weather-form").addEventListener("submit",e=>{e.preventDefault();loadWeather($("weather-city").value)});
+</script></body></html>
